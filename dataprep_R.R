@@ -17,7 +17,7 @@ df=read.csv(file,stringsAsFactors = F,sep=';',nrows = 1000)
 df= read.csv(file,stringsAsFactors = F,sep=';',nrows=1000,
              na.string='missing')
 
-#-----apply functions---------------------------------------
+#apply functions---------------------------------------
 
 # a simple for loop to calculate mean of all columns and print 
 for(i in 1:ncol(mtcars)){
@@ -87,14 +87,14 @@ flights
 
 
 
-#Filter Function---------------
+  #Filter Function---------------
 d1=filter(hflights, Month == 1 , DayOfWeek==2) #numerical conditions
 d2=filter(hflights,Month==1 & UniqueCarrier %in% c("AA", "UA")) #cat and num conditions
 
 
 
 
-#Select Function-------------------
+  #Select Function-------------------
 d3=select(hflights,UniqueCarrier,Year:ArrTime,contains('Taxi'))
 d4=select(hflights,- UniqueCarrier,Year:ArrTime,- contains('Taxi'))
 
@@ -117,7 +117,7 @@ filter(select(flights, UniqueCarrier, DepDelay), DepDelay > 60)
 
 
 
-#PIPE OPERATOR---------------------------------------
+  #PIPE OPERATOR---------------------------------------
 x=sample(10,6) 
 x
 sum(sin(log(x)))
@@ -135,13 +135,13 @@ x %>%
     select(contains("Dep")) %>% 
     filter(DepDelay>100)
   
-#Arrange function----------------
+  #Arrange function----------------
   d6 = flights %>% 
        select(UniqueCarrier,FlightNum,DepTime,DepDelay,contains('Taxi')) %>% 
        filter(FlightNum%%2==0 & UniqueCarrier %in% c('MQ','CO','WN')) %>% 
         arrange(UniqueCarrier,desc(DepDelay))
   
-#Mutate Functions : create new columns--------------------
+  #Mutate Functions : create new columns--------------------
   d7=flights %>%
     select(Distance, AirTime,DepDelay,TaxiIn,TaxiOut) %>%
     mutate(speed=Distance/AirTime,
@@ -152,7 +152,7 @@ x %>%
     arrange(time_diff) %>% 
     mutate(DepDelay_high=ifelse(DepDelay>60,1,0))
 
-# SUMMARIZE AND GROUPBY-----------------------------
+  # SUMMARIZE AND GROUPBY-----------------------------
   # create a table grouped by Dest, and then summarise each group by taking the mean of ArrDelay
   
   d8=flights %>%
@@ -169,7 +169,7 @@ x %>%
     summarise(flight_count = n()) %>% 
     arrange(desc(flight_count) )
   
-# tally function ,n() , n_distinct(), lag()----------------
+  # tally function ,n() , n_distinct(), lag()----------------
   flights %>%
     group_by(Month, DayofMonth) %>%
     tally(sort=TRUE) 
@@ -206,3 +206,118 @@ x %>%
     
     
 # TIDYR AND LUBRIDATE ---------------------------
+  library(lubridate)
+  
+  # prebuilt functions .... but not often used
+  #output will always be of the form yyyy-mm-dd
+  ymd("20110604")
+  mdy("06-04-2011")
+  dmy("04/06/2011")
+  
+  # y : year
+  # m : month
+  # d : day
+  class(mdy("06-04-2011"))
+  
+  
+  arrive = ydm_hms("2011-06-04 12:00:00", tz = "Pacific/Auckland")
+  leave = ymd_hms("2011-08-10 14:00:00", tz = "Pacific/Auckland")
+  OlsonNames()
+  #to change the timezone internally with_tz( <dateframe>, "Asia/Kolkata")
+  with_tz(arrive,'Asia/Kolkata')
+  
+  #tio get current values
+  lubridate::now()
+  lubridate::today()
+  
+  
+  
+  # doing date calculations ------------------
+  leap_year(2011)
+  
+  ymd(20110101) + dyears(13) #
+  
+  ymd(20110101) + years(1)
+  
+  
+  leap_year(2020)
+  
+  ymd(20110101) + dyears(12) #adding exactly 365 days  #only happens for multiples of 12
+  
+  ymd(20110101) + years(12) # this explicitly add one year
+  
+  # ymd(20120101) + months(3)
+  
+  ## Find out how to take difference of two dates 
+  ## how to get the output of difference in 
+  ## different units : minutes , days, months
+  
+  d1=ymd(20110101)
+  d2=ymd(20110101) + dyears(11)
+  d2-d1
+
+  
+  #Parse_date_time()----------------------------------
+  # d= two digit date
+  # y = two digit year
+  # b = abbreviated month name
+  # Y= 4 digit year
+  # B = complete month name
+  # p = for  am pm
+  # m = month in numbers
+  # %H:%M = time is in 24 hrs format
+  # %I:%M = time is in 12 hr format , this needs to be accompanied by p
+  
+  parse_date_time("01-12-Jan","%d-%y-%b")
+  
+  z=parse_date_time("2012-01-January 10:05 PM","%Y-%d-%B %I:%M %p")
+  z + dyears(121)
+  
+  # how do i covert unix time stamp to R datetime format
+  # extracting date time in specfic format from POSIXt object
+  format(z,"%Y-%b")
+  
+  # January/01/12
+  format(z,"%B/%d/%y")
+  
+  
+  
+  
+  #Function can be used seamlessely for vectors as well
+  x = c("09-01-01", "09-01-02", "09-01-03")
+  parse_date_time(x, "ymd")
+  parse_date_time(x, "%y%m%d")
+  parse_date_time(x, "%y %m %d")
+  
+  
+  
+  
+# Creating Dummies ------------------------------------------
+  CreateDummies=function(data,var,freq_cutoff=100){
+    t=table(data[,var])
+    t=t[t>freq_cutoff]
+    t=sort(t)
+    categories=names(t)[-1]#removing the first one(least frequent..convention)
+    categories=names(t)[-1] #neglecting the least occuring value
+    
+    #datawise operations
+    
+    for( cat in categories){
+      name=paste(var,cat,sep="_")
+      name=gsub(" ","",name)
+      name=gsub("-","_",name)
+      name=gsub("\\?","Q",name)
+      
+      data[,name]=as.numeric(data[,var]==cat)
+    }
+    
+    data[,var]=NULL
+    return(data)
+  }
+  
+  ci=CreateDummies(ci,'marital.status',100)
+  
+  ci=CreateDummies(ci,'native.country',100)
+  
+  
+  
