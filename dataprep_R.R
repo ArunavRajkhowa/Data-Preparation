@@ -293,6 +293,10 @@ x %>%
   
   
 # Creating Dummies ------------------------------------------
+  #run the following code line by line to get the idea
+  getwd()
+  file='census_income.csv'
+  ci=read.csv(file,stringsAsFactors = F)
   CreateDummies=function(data,var,freq_cutoff=100){
     t=table(data[,var])
     t=t[t>freq_cutoff]
